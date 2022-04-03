@@ -2,22 +2,42 @@
   "name": "jsmvc",
   "version": "1.0.0",
   "description": "js mvc toy framework",
-  "main": "build/index.js",
+  "main": "dist/public/index.js",
   "scripts": {
-    "start:build": "tsc -w",
-    "start:run": "nodemon dist/index.js",
+    "build": "tsc --build --clean",
+    "start:dev": "tsc -w",
+    "start:run": "nodemon dist/public/index.js",
     "start": "concurrently npm:start:*",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
+  },
+  "jest": {
+    "verbose": true,
+    "detectOpenHandles": true,
+    "collectCoverage": true,
+    "coverageProvider": "v8",
+    "collectCoverageFrom": [
+      "src/framework/**/*.ts"
+    ],
+    "roots": [
+      "<rootDir>/src/framework/tests"
+    ]
   },
   "author": "opmvpc",
   "license": "ISC",
-  "dependencies": {},
   "devDependencies": {
-    "@types/node": "^17.0.23",
-    "tslint": "^6.1.3",
-    "typescript": "^4.6.3",
     "@tsconfig/node16": "^1.0.2",
+    "@types/jest": "^27.4.1",
+    "@types/node": "^17.0.23",
     "concurrently": "^7.0.0",
-    "nodemon": "^2.0.15"
+    "dotenv": "^16.0.0",
+    "jest": "^27.5.1",
+    "nodemon": "^2.0.15",
+    "supertest": "^6.2.2",
+    "tslint": "^6.1.3",
+    "typescript": "^4.6.3"
+  },
+  "dependencies": {
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7"
   }
 }
