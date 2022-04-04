@@ -30,13 +30,14 @@ export class Router {
   }
 
   public async dispatch() {
-    const requestMethod = HttpContext.get()?.request.method ?? "GET";
-    const requestPath = HttpContext.get()?.request.url ?? "/";
+    const requestMethod = HttpContext.get()?.request.method;
+    const requestPath = HttpContext.get()?.request.url;
 
     const matching = this.match(requestMethod, requestPath);
 
     if (matching) {
       try {
+        HttpContext.get()!.currentRoute = matching;
         return matching.dispatch();
       } catch (error: any) {
         return this.dispatchError(error);
@@ -63,7 +64,7 @@ export class Router {
     return this.routes.map((route: Route) => route.path);
   }
 
-  addErrorHandler(code: number, handler: CallableFunction): void {
+  setErrorHandler(code: number, handler: CallableFunction): void {
     this.errorHandler.set(code, handler);
   }
 
@@ -97,7 +98,7 @@ export class Router {
     return this.errorHandler.get(500)?.();
   }
 
-  redirect(path: string) {
+  redirect(path: string): void {
     const response = HttpContext.get()?.response;
 
     response.writeHead(302, {

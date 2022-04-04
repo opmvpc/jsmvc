@@ -25,11 +25,12 @@ class Router {
         return this.add("POST", path, handler);
     }
     async dispatch() {
-        const requestMethod = HttpContext_1.HttpContext.get()?.request.method ?? "GET";
-        const requestPath = HttpContext_1.HttpContext.get()?.request.url ?? "/";
+        const requestMethod = HttpContext_1.HttpContext.get()?.request.method;
+        const requestPath = HttpContext_1.HttpContext.get()?.request.url;
         const matching = this.match(requestMethod, requestPath);
         if (matching) {
             try {
+                HttpContext_1.HttpContext.get().currentRoute = matching;
                 return matching.dispatch();
             }
             catch (error) {
@@ -52,7 +53,7 @@ class Router {
     paths() {
         return this.routes.map((route) => route.path);
     }
-    addErrorHandler(code, handler) {
+    setErrorHandler(code, handler) {
         this.errorHandler.set(code, handler);
     }
     dispatchNotAllowed() {

@@ -35,4 +35,20 @@ describe("Server is responding correctly", () => {
         expect(res.status).toBe(404);
         expect(res.text).toBe("Not found");
     });
+    it("should redirect", async () => {
+        const server = new Server_1.Server();
+        server.router.get("/test", () => server.router.redirect("/"));
+        const res = await supertest(server.create()).get("/test");
+        expect(res.status).toBe(302);
+        expect(res.header.location).toBe("/");
+    });
+    it("should pass context to handler", async () => {
+        const server = new Server_1.Server();
+        server.router.add("GET", "/products/view/{product}", (ctx) => {
+            return (0, Response_1.response)(`Viewing product ${ctx.currentRoute?.params.get("product")}`);
+        });
+        const res = await supertest(server.create()).get("/products/view/product-1");
+        expect(res.status).toBe(200);
+        expect(res.text).toBe("Viewing product product-1");
+    });
 });

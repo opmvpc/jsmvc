@@ -9,14 +9,13 @@ export class Server {
     this._router = new Router();
   }
 
-  get router() {
+  get router(): Router {
     return this._router;
   }
 
   create() {
     const http = require("http");
     const router = this._router;
-
     return http.createServer(function (req: any, res: any) {
       const state = new HttpContext(req, res);
       return storage.run(state, async () => {

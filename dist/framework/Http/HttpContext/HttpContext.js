@@ -16,5 +16,11 @@ class HttpContext {
     get response() {
         return this._response;
     }
+    get currentRoute() {
+        return this._currentRoute;
+    }
+    set currentRoute(route) {
+        this._currentRoute = route;
+    }
 }
 exports.HttpContext = HttpContext;
