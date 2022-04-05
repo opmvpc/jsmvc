@@ -87,5 +87,23 @@ class Router {
         });
         response.end();
     }
+    route(name, parameters = {}) {
+        const route = this.routes.find((route) => route.name === name);
+        if (route) {
+            let path = Route_1.Route.normalizePath(route.path);
+            for (const key in parameters) {
+                path = path.replace(`{${key}}`, parameters[key]);
+                path = path.replace(`{${key}?}`, parameters[key]);
+            }
+            // remove optional parameters
+            path = path.replace(/{[^}]+\?}/, "");
+            let missingRequiredParams = path.match(/{([^}]+)}/);
+            if (missingRequiredParams) {
+                throw new Error(`Missing required parameter: ${missingRequiredParams[1]}`);
+            }
+            return Route_1.Route.normalizePath(path);
+        }
+        throw new Error("Route not found with that name");
+    }
 }
 exports.Router = Router;
