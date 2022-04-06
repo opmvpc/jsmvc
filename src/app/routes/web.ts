@@ -1,9 +1,10 @@
 import { Router } from "../../framework/Http/Router/Router";
 import { response, jsonResponse } from "../../framework/Http/Response";
 import { HttpContext } from "../../framework/Http/HttpContext/HttpContext";
+import { view } from "../../framework/View/ViewHelper";
 
 export const registerRoutes = async (router: Router): Promise<void> => {
-  router.get("/", () => response("Hello World!")).setName("home");
+  router.get("/", () => view("hello")).setName("home");
   router.get("/old-home", () => router.redirect("/"));
   router.get("/has-server-error", () => {
     throw new Error("Oops!");
