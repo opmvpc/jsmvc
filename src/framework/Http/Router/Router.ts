@@ -1,4 +1,3 @@
-import { registerRoutes } from "../../../app/routes/web";
 import { HttpContext } from "../HttpContext/HttpContext";
 import { response } from "../Response";
 import { Route } from "./Route";
@@ -10,9 +9,6 @@ export class Router {
   constructor() {
     this.routes = [];
     this.errorHandler = new Map();
-    if (process.env.NODE_ENV !== "test") {
-      registerRoutes(this);
-    }
   }
 
   add(method: string, path: string, handler: CallableFunction): Route {

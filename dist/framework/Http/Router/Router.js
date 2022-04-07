@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Router = void 0;
-const web_1 = require("../../../app/routes/web");
 const HttpContext_1 = require("../HttpContext/HttpContext");
 const Response_1 = require("../Response");
 const Route_1 = require("./Route");
@@ -9,9 +8,6 @@ class Router {
     constructor() {
         this.routes = [];
         this.errorHandler = new Map();
-        if (process.env.NODE_ENV !== "test") {
-            (0, web_1.registerRoutes)(this);
-        }
     }
     add(method, path, handler) {
         const route = new Route_1.Route(method, path, handler);

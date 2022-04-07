@@ -32,8 +32,4 @@ export class Server {
       });
     });
   }
-
-  start() {
-    return this.create().listen(process.env.PORT || 8000);
-  }
 }

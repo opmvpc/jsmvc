@@ -89,7 +89,7 @@ class Engine {
     getLayoutPath(template) {
         const match = template.match(/@extends\s*\('([^']+)'\)/);
         if (match !== null) {
-            return this._manager.resolvePath(match[1]) ?? "";
+            return this._manager.resolvePath(match[1]);
         }
         return "";
     }
