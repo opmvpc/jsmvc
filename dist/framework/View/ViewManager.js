@@ -7,26 +7,39 @@ const pathManager = require("path");
 const fs = require("fs");
 class ViewManager {
     constructor() {
-        this.paths = [];
-        this.engine = new Engine_1.Engine(this);
+        this._paths = [];
+        this._engine = new Engine_1.Engine();
+        this._engine.setManager(this);
+        this._macros = new Map();
+        this._templates = new Map();
     }
     addPath(path) {
-        this.paths.push(path);
+        this._paths.push(path);
         return this;
     }
     resolve(template, data = {}) {
         const filePath = this.resolvePath(template);
-        return this.engine.render(new View_1.View(filePath, data));
+        const compiledView = this._engine.render(new View_1.View(filePath, data, template));
+        this._templates.set(template, compiledView);
+        return compiledView;
     }
     resolvePath(template) {
-        for (const path of this.paths) {
-            const filePath = pathManager.resolve(path, template + ".html");
+        const templateName = template.replace(/\./g, "/");
+        for (const path of this._paths) {
+            const filePath = pathManager.resolve(path, templateName + ".html");
             //check if file exists
             if (fs.existsSync(filePath)) {
                 return filePath;
             }
         }
         throw new Error(`Template '${template}' not found`);
+    }
+    addMacro(name, macro) {
+        this._macros.set(name, macro);
+        return this;
+    }
+    get macros() {
+        return this._macros;
     }
 }
 exports.ViewManager = ViewManager;

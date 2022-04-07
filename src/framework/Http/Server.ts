@@ -1,4 +1,3 @@
-import path from "path";
 import { ViewManager } from "../View/ViewManager";
 import { HttpContext } from "./HttpContext/HttpContext";
 import { storage } from "./HttpContext/LocalStorage/LocalStorage";

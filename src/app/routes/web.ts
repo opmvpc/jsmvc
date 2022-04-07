@@ -22,4 +22,10 @@ export const registerRoutes = async (router: Router): Promise<void> => {
     }
     return response(`Service is ${ctx.currentRoute?.params.get("service")}`);
   });
+  router.get("/escape", () =>
+    view("escape", { name: "<script>alert('hello')</script>" })
+  );
+  router.get("/no-escape", () =>
+    view("no-escape", { name: "<script>alert('hello')</script>" })
+  );
 };

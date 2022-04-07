@@ -10,7 +10,7 @@ describe("Simple rendering", () => {
   it("should return input", () => {
     const viewManager = new ViewManager();
     viewManager.addPath(__dirname + "/test_templates");
-    expect(viewManager.resolve("static_templates/hello")).toEqual(
+    expect(viewManager.resolve("static_templates.hello")).toEqual(
       `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -31,6 +31,14 @@ describe("Simple rendering", () => {
     viewManager.addPath(__dirname + "/test_templates");
     expect(viewManager.resolve("hello-world", { name: "World" })).toEqual(
       `<h1>Hello World</h1>`
+    );
+  });
+
+  it("should preserve space characters in data values", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    expect(viewManager.resolve("hello-world", { name: "\nWorld" })).toEqual(
+      `<h1>Hello &#10;World</h1>`
     );
   });
 
@@ -79,7 +87,9 @@ describe("Simple rendering", () => {
   it("should render a layout and it's content", () => {
     const viewManager = new ViewManager();
     viewManager.addPath(__dirname + "/test_templates");
-    expect(viewManager.resolve("with-layout", { name: "World" })).toEqual(
+    expect(
+      viewManager.resolve("with-layout", { name: "<h1>Hello World</h1>" })
+    ).toEqual(
       `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -89,9 +99,69 @@ describe("Simple rendering", () => {
     <title>Hello</title>
   </head>
   <body>
-    <h1>Hello World</h1>
+    &#60;h1&#62;Hello World&#60;&#47;h1&#62;
   </body>
 </html>`
+    );
+  });
+
+  it("should include and render content", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    expect(viewManager.resolve("include.include", { name: "hello-world" }))
+      .toEqual(`<section><h1>Include</h1>
+<p>hello&#45;world</p></section>`);
+  });
+
+  it("should escape html", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    expect(
+      viewManager.resolve("escape", { name: "<script>alert('hello')</script>" })
+    ).toEqual(`<div>
+  <h1>&#60;script&#62;alert&#40;&#39;hello&#39;&#41;&#60;&#47;script&#62;</h1>
+</div>`);
+  });
+
+  it("should not escape html", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    expect(
+      viewManager.resolve("no-escape", {
+        name: "<script>alert('hello')</script>",
+      })
+    ).toEqual(`<div>
+  <h1><script>alert('hello')</script></h1>
+</div>`);
+  });
+});
+
+describe("Macros", () => {
+  it("should use a registered macro", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    viewManager.addMacro("hello", (name) => `Hello ${name}`);
+    expect(viewManager.resolve("macros.hello", { name: "World" })).toEqual(
+      `Hello World`
+    );
+  });
+
+  it("should use a registered macro using directive syntax", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    viewManager.addMacro("hello", (name) => `Hello ${name}`);
+    expect(
+      viewManager.resolve("macros.hello-directive", { name: "World" })
+    ).toEqual(`Hello World`);
+  });
+
+  it("should throw an error if a macro is not found", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    expect(() =>
+      viewManager.resolve("macros.not-found", { name: "World" })
+    ).toThrowError(
+      "Error in view 'macros.not-found': TypeError: this.notFound is not a function"
     );
   });
 });

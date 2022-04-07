@@ -20,5 +20,7 @@ const registerRoutes = async (router) => {
         }
         return (0, Response_1.response)(`Service is ${ctx.currentRoute?.params.get("service")}`);
     });
+    router.get("/escape", () => (0, ViewHelper_1.view)("escape", { name: "<script>alert('hello')</script>" }));
+    router.get("/no-escape", () => (0, ViewHelper_1.view)("no-escape", { name: "<script>alert('hello')</script>" }));
 };
 exports.registerRoutes = registerRoutes;
