@@ -1,5 +1,5 @@
-import { HttpContext } from "../../../Http/HttpContext/HttpContext";
-import { Route } from "../../../Http/Router/Route";
+import { HttpContext } from "../../../../src/framework/Http/HttpContext/HttpContext";
+import { Route } from "../../../../src/framework/Http/Router/Route";
 
 describe("Path normalization", () => {
   it("should return /", () => {

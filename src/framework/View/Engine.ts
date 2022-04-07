@@ -1,7 +1,10 @@
 import { View } from "./View";
+import { ViewManager } from "./ViewManager";
 const fs = require("fs");
 
 export class Engine {
+  constructor(private _manager: ViewManager) {}
+
   /**
    *
    * @param view view to render
@@ -11,16 +14,25 @@ export class Engine {
     const template: string = fs.readFileSync(view.template, "utf8");
 
     let tokens: string[] = this.getTokens(template);
-    // console.log(tokens);
     let code: string = this.generateCode(tokens);
-    // console.log(code);
+    let layoutPath = this.getLayoutPath(template);
+    if (layoutPath !== "") {
+      return this.renderViewWithLayout(code, view, layoutPath);
+    }
 
     return this.executeCode(code, view);
   }
 
-  private generateCode(tokens: string[]) {
-    let code = "var r=[];";
+  private renderViewWithLayout(code: string, view: View, layoutPath: string) {
+    const content = this.executeCode(code, view);
+    const layoutView = new View(layoutPath, {
+      content: content,
+    });
+    return this.render(layoutView);
+  }
 
+  private generateCode(tokens: string[]) {
+    let code = "";
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
       if (token.startsWith("@")) {
@@ -31,13 +43,12 @@ export class Engine {
         code += this.addText(token);
       }
     }
-    code += 'return r.join("");';
     return code;
   }
 
   private getTokens(template: string) {
     const tokensRegex =
-      /\{\{([^}]+)\}\}|@[^\(]+\(([^\)]+)\)\s*|@endif\s*|@endfor\s*|@else\s*/g;
+      /\{\{([^}]+)\}\}|(@[^\(]+\(([^\)]+)\)|@endif|@endfor|@else)\s*/g;
     let cursor = 0;
     let match;
     let tokens = [];
@@ -54,6 +65,7 @@ export class Engine {
   }
 
   private executeCode(code: string, view: View) {
+    code = "const r=[];" + code + "return r.join('');";
     let html = new Function(code).apply(view.data);
     html = html.replace(/__r__/g, "\r");
     html = html.replace(/__t__/g, "\t");
@@ -81,6 +93,17 @@ export class Engine {
     line = line.replace(/@for\s*\(([^\)]+)\)/, "for($1){");
     line = line.replace(/@endfor/, "}");
 
+    line = line.replace(/@extends\s*\(([^\)]+)\)/, "");
+
     return line;
+  }
+
+  public getLayoutPath(template: string): string {
+    const match = template.match(/@extends\s*\('([^']+)'\)/);
+
+    if (match !== null) {
+      return this._manager.resolvePath(match[1]) ?? "";
+    }
+    return "";
   }
 }

@@ -1,8 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Engine = void 0;
+const View_1 = require("./View");
 const fs = require("fs");
 class Engine {
+    constructor(_manager) {
+        this._manager = _manager;
+    }
     /**
      *
      * @param view view to render
@@ -11,13 +15,22 @@ class Engine {
     render(view) {
         const template = fs.readFileSync(view.template, "utf8");
         let tokens = this.getTokens(template);
-        // console.log(tokens);
         let code = this.generateCode(tokens);
-        // console.log(code);
+        let layoutPath = this.getLayoutPath(template);
+        if (layoutPath !== "") {
+            return this.renderViewWithLayout(code, view, layoutPath);
+        }
         return this.executeCode(code, view);
     }
+    renderViewWithLayout(code, view, layoutPath) {
+        const content = this.executeCode(code, view);
+        const layoutView = new View_1.View(layoutPath, {
+            content: content,
+        });
+        return this.render(layoutView);
+    }
     generateCode(tokens) {
-        let code = "var r=[];";
+        let code = "";
         for (let i = 0; i < tokens.length; i++) {
             const token = tokens[i];
             if (token.startsWith("@")) {
@@ -30,11 +43,10 @@ class Engine {
                 code += this.addText(token);
             }
         }
-        code += 'return r.join("");';
         return code;
     }
     getTokens(template) {
-        const tokensRegex = /\{\{([^}]+)\}\}|@[^\(]+\(([^\)]+)\)\s*|@endif\s*|@endfor\s*|@else\s*/g;
+        const tokensRegex = /\{\{([^}]+)\}\}|(@[^\(]+\(([^\)]+)\)|@endif|@endfor|@else)\s*/g;
         let cursor = 0;
         let match;
         let tokens = [];
@@ -48,6 +60,7 @@ class Engine {
         return tokens;
     }
     executeCode(code, view) {
+        code = "const r=[];" + code + "return r.join('');";
         let html = new Function(code).apply(view.data);
         html = html.replace(/__r__/g, "\r");
         html = html.replace(/__t__/g, "\t");
@@ -70,7 +83,15 @@ class Engine {
         line = line.replace(/@endif/, "}");
         line = line.replace(/@for\s*\(([^\)]+)\)/, "for($1){");
         line = line.replace(/@endfor/, "}");
+        line = line.replace(/@extends\s*\(([^\)]+)\)/, "");
         return line;
+    }
+    getLayoutPath(template) {
+        const match = template.match(/@extends\s*\('([^']+)'\)/);
+        if (match !== null) {
+            return this._manager.resolvePath(match[1]) ?? "";
+        }
+        return "";
     }
 }
 exports.Engine = Engine;

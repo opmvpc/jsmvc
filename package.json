@@ -19,7 +19,7 @@
       "src/framework/**/*.ts"
     ],
     "roots": [
-      "<rootDir>/src/framework/tests"
+      "<rootDir>/tests"
     ]
   },
   "author": "opmvpc",

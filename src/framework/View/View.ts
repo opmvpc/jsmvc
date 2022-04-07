@@ -1,5 +1,3 @@
-import { Engine } from "./Engine";
-
 export class View {
   constructor(private _template: string, private _data: {}) {}
 

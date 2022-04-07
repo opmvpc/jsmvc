@@ -1,6 +1,6 @@
-import { HttpContext } from "../../Http/HttpContext/HttpContext";
-import { response, jsonResponse } from "../../Http/Response";
-import { Server } from "../../Http/Server";
+import { HttpContext } from "../../../src/framework/Http/HttpContext/HttpContext";
+import { response, jsonResponse } from "../../../src/framework/Http/Response";
+import { Server } from "../../../src/framework/Http/Server";
 
 const supertest = require("supertest");
 

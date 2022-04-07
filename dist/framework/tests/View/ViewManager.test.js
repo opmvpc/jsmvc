@@ -52,4 +52,9 @@ describe("Simple rendering", () => {
   <li>Universe</li>
   </ul>`);
     });
+    it("should throw an error if a template is not found", () => {
+        const viewManager = new ViewManager_1.ViewManager();
+        viewManager.addPath(__dirname + "/TestTemplates");
+        expect(() => viewManager.resolve("not-found")).toThrowError("Template not found");
+    });
 });

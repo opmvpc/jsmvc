@@ -1,13 +1,12 @@
-import { response } from "../../Http/Response";
-import { Server } from "../../Http/Server";
-import { view } from "../../View/ViewHelper";
+import { Server } from "../../../src/framework/Http/Server";
+import { view } from "../../../src/framework/View/ViewHelper";
 const supertest = require("supertest");
 
 describe("view helper", () => {
   it("should return an html response", async () => {
     const server = new Server();
-    server.router.get("/", () => view("hello"));
-    server.viewManager.addPath(__dirname + "/TestTemplates");
+    server.router.get("/", () => view("static_templates/hello"));
+    server.viewManager.addPath(__dirname + "/test_templates");
     const res = await supertest(server.create()).get("/");
     expect(res.status).toBe(200);
     expect(res.text).toBe(`<!DOCTYPE html>

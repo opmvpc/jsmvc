@@ -1,6 +1,6 @@
-import { response } from "../../../Http/Response";
-import { Router } from "../../../Http/Router/Router";
-import { Server } from "../../../Http/Server";
+import { response } from "../../../../src/framework/Http/Response";
+import { Router } from "../../../../src/framework/Http/Router/Router";
+import { Server } from "../../../../src/framework/Http/Server";
 const supertest = require("supertest");
 
 describe("Error handling", () => {
