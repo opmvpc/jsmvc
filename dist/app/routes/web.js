@@ -4,7 +4,14 @@ exports.registerRoutes = void 0;
 const Response_1 = require("../../framework/Http/Response");
 const ViewHelper_1 = require("../../framework/View/ViewHelper");
 const registerRoutes = async (router) => {
-    router.get("/", () => (0, ViewHelper_1.view)("hello")).setName("home");
+    router
+        .get("/", () => (0, ViewHelper_1.view)("mixed", {
+        users: [
+            { name: "Jean Bauche", role: "admin" },
+            { name: "Eli Kopter", role: "guest" },
+        ],
+    }))
+        .setName("home");
     router.get("/old-home", () => router.redirect("/"));
     router.get("/has-server-error", () => {
         throw new Error("Oops!");

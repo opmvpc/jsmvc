@@ -1,0 +1,11 @@
+@extends("layouts.simple-layout")
+<div>
+  @for (user of this.users)
+  <div>
+    <h1>{{ user.name }}</h1>
+    @if (user.role === 'admin')
+    <h2>{{ user.role }}</h2>
+    @endif
+  </div>
+  @endfor
+</div>

@@ -4,7 +4,16 @@ import { HttpContext } from "../../framework/Http/HttpContext/HttpContext";
 import { view } from "../../framework/View/ViewHelper";
 
 export const registerRoutes = async (router: Router): Promise<void> => {
-  router.get("/", () => view("hello")).setName("home");
+  router
+    .get("/", () =>
+      view("mixed", {
+        users: [
+          { name: "Jean Bauche", role: "admin" },
+          { name: "Eli Kopter", role: "guest" },
+        ],
+      })
+    )
+    .setName("home");
   router.get("/old-home", () => router.redirect("/"));
   router.get("/has-server-error", () => {
     throw new Error("Oops!");
