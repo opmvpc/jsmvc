@@ -134,6 +134,40 @@ describe("Simple rendering", () => {
   <h1><script>alert('hello')</script></h1>
 </div>`);
   });
+
+  it("should render mixed templates", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    expect(
+      viewManager.resolve("mixed", {
+        users: [
+          { name: "Jean Bauche", role: "admin" },
+          { name: "Eli Kopter", role: "guest" },
+        ],
+      })
+    ).toEqual(
+      `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hello</title>
+  </head>
+  <body>
+    <div>
+  <div>
+    <h1>Jean Bauche</h1>
+    <h2>admin</h2>
+    </div>
+  <div>
+    <h1>Eli Kopter</h1>
+    </div>
+  </div>
+  </body>
+</html>`
+    );
+  });
 });
 
 describe("Macros", () => {
