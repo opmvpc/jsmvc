@@ -10,6 +10,12 @@
     "start": "concurrently npm:start:*",
     "test": "jest"
   },
+  "nodemonConfig": {
+    "ignore": [
+      "tests/*",
+      "storage/*"
+    ]
+  },
   "jest": {
     "verbose": true,
     "detectOpenHandles": true,

@@ -165,3 +165,27 @@ describe("Macros", () => {
     );
   });
 });
+
+describe("View cache", () => {
+  it("should cache a view", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    viewManager.resolve("hello-world", { name: "World" });
+    const fs = require("fs");
+    const path = require("path");
+    const hash = viewManager.hashName("hello-world");
+    const filePath = path.resolve(
+      __dirname,
+      viewManager.VIEWCACHEDIR,
+      hash + ".js"
+    );
+    expect(fs.existsSync(filePath)).toBeTruthy();
+  });
+
+  it("should use cache", () => {
+    const viewManager = new ViewManager();
+    viewManager.addPath(__dirname + "/test_templates");
+    viewManager.resolve("hello-world", { name: "World" });
+    viewManager.resolve("hello-world", { name: "World" });
+  });
+});

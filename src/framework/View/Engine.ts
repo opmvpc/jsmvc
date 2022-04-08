@@ -31,13 +31,14 @@ export class Engine {
    * @returns string of rendered html
    */
   public render(view: View): string {
-    const template: string = fs.readFileSync(view.template, "utf8");
-    const code = this.compile(template, view);
-
-    return this.executeCode(code, view);
+    const code = this.compile(view);
+    this._manager?.putCodeInCache(view.templateName, code);
+    return this.executeCode(code, view.data, view.templateName);
   }
 
-  public compile(template: string, view: View): string {
+  public compile(view: View): string {
+    const template: string = fs.readFileSync(view.template, "utf8");
+
     let tokens: string[] = this.getTokens(template);
     let code: string = this.generateCode(tokens, view.data);
     let { layoutPath, layoutName } = this.getLayoutPathAndName(template);
@@ -53,7 +54,7 @@ export class Engine {
     layoutPath: string,
     templateName: string
   ): string {
-    const content = this.executeCode(code, view);
+    const content = this.executeCode(code, view.data, view.templateName);
     const layoutView = new View(
       layoutPath,
       {
@@ -86,22 +87,19 @@ export class Engine {
   private include(line: string, data: { [k: string]: any }): string {
     // include partial
     let match = line.match(Engine.INCLUDE_REGEX);
-    if (match !== null) {
-      let [partialTemplate, partialData] = match[1].split(",");
-      partialTemplate = partialTemplate.replace(/['"]+/g, "");
-      partialData = JSON.parse(JSON.stringify(partialData));
-      const partialDataObject: { [k: string]: any } = new Function(
-        "return " + partialData
-      ).apply(data);
-      const partialPath = this._manager?.resolvePath(partialTemplate);
-      const partialView = new View(
-        partialPath!,
-        partialDataObject,
-        partialTemplate
-      );
-      return this.addText(this.render(partialView));
-    }
-    return "";
+    let [partialTemplate, partialData] = match![1].split(",");
+    partialTemplate = partialTemplate.replace(/['"]+/g, "");
+    partialData = JSON.parse(JSON.stringify(partialData));
+    const partialDataObject: { [k: string]: any } = new Function(
+      "return " + partialData
+    ).apply(data);
+    const partialPath = this._manager?.resolvePath(partialTemplate);
+    const partialView = new View(
+      partialPath!,
+      partialDataObject,
+      partialTemplate
+    );
+    return this.addText(this.render(partialView));
   }
 
   private getTokens(template: string) {
@@ -121,27 +119,30 @@ export class Engine {
     return tokens;
   }
 
-  public executeCode(code: string, view: View) {
+  public executeCode(
+    code: string,
+    data: { [k: string]: any },
+    templateName: string
+  ): string {
     code = "const r=[];" + code + "return r.join('');";
-    let data: { [k: string]: any } = this.addMacrosToViewData(view);
+    data = this.addMacrosToViewData(data);
+
     let html = "";
     try {
-      console.log(code);
-
       html = new Function(code).apply(data);
       html = html.replace(/__r__/g, "\r");
       html = html.replace(/__t__/g, "\t");
       html = html.replace(/__n__/g, "\n");
-      console.log(html);
 
       return html;
     } catch (error) {
-      throw new Error(`Error in view '${view.templateName}': ${error}`);
+      throw new Error(`Error in view '${templateName}': ${error}`);
     }
   }
 
-  private addMacrosToViewData(view: View) {
-    let data: { [k: string]: any } = view.data;
+  private addMacrosToViewData(data: { [k: string]: any }): {
+    [k: string]: any;
+  } {
     data["escape"] = this.escape;
     for (const [key, value] of this._manager!.macros) {
       data[key] = value;
