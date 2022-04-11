@@ -24,6 +24,7 @@ class Server {
         const http = require("http");
         const router = this._router;
         const viewManager = this._viewManager;
+        this.viewManager.emptyCacheDir();
         return http.createServer(function (req, res) {
             const state = new HttpContext_1.HttpContext(req, res, viewManager);
             return LocalStorage_1.storage.run(state, async () => {

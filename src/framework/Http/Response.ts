@@ -1,6 +1,6 @@
 import { HttpContext } from "./HttpContext/HttpContext";
 
-export const response = (
+export const response = async (
   body: any,
   status: number = 200,
   header: object = { "Content-Type": "text/html" }

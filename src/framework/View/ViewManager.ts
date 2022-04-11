@@ -1,3 +1,4 @@
+import { fstatSync } from "fs";
 import { Engine } from "./Engine";
 import { View } from "./View";
 const pathManager = require("path");
@@ -25,7 +26,7 @@ export class ViewManager {
     return this;
   }
 
-  public resolve(template: string, data: {} = {}): string {
+  public async resolve(template: string, data: {} = {}): Promise<string> {
     const hash = this.hashName(template);
     const filePath = this.resolvePath(template);
     if (!this._templates.has(hash)) {
@@ -34,8 +35,20 @@ export class ViewManager {
       );
       return compiledView;
     }
-    const code = fs.readFileSync(this._templates.get(hash), "utf8");
+    const code = await this.readCachedTemplate(this._templates.get(hash)!);
+
     return this._engine.executeCode(code, data, hash);
+  }
+
+  public readCachedTemplate(cachedTemplatePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      fs.readFile(cachedTemplatePath, "utf8", (err: any, code: string) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(code);
+      });
+    });
   }
 
   public hashName(template: string): string {
@@ -73,18 +86,31 @@ export class ViewManager {
   }
 
   public emptyCacheDir(): void {
+    this.deleteCacheDir();
     this.ensureFolderExists(this._cacheDir);
-    fs.readdirSync(this._cacheDir).forEach((file: string) => {
-      fs.unlinkSync(pathManager.resolve(this._cacheDir, file));
-    });
+    // fs.readdirSync(this._cacheDir).forEach((file: string) => {
+    //   fs.unlinkSync(pathManager.resolve(this._cacheDir, file));
+    // });
     this._templates.clear();
+  }
+
+  private deleteCacheDir(): void {
+    try {
+      fs.rmSync(this._cacheDir, { recursive: true });
+    } catch (error: any) {
+      if (error.code !== "ENOENT") {
+        throw error;
+      }
+    }
   }
 
   private ensureFolderExists(path: string, mask: number = 0o755): void {
     try {
       fs.mkdirSync(path, mask);
     } catch (error: any) {
-      // do nothing
+      if (error.code !== "EEXIST") {
+        throw error;
+      }
     }
   }
 

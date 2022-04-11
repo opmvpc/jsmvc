@@ -8,16 +8,16 @@ const setupViewManager = (): ViewManager => {
 };
 
 describe("Simple rendering", () => {
-  it("should return empty string", () => {
+  it("should return empty string", async () => {
     const viewManager = setupViewManager();
 
-    expect(viewManager.resolve("static_templates/empty")).toEqual("");
+    expect(await viewManager.resolve("static_templates/empty")).toEqual("");
   });
 
-  it("should return input", () => {
+  it("should return input", async () => {
     const viewManager = setupViewManager();
 
-    expect(viewManager.resolve("static_templates.hello")).toEqual(
+    expect(await viewManager.resolve("static_templates.hello")).toEqual(
       `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -33,69 +33,69 @@ describe("Simple rendering", () => {
     );
   });
 
-  it("should render a simple view", () => {
+  it("should render a simple view", async () => {
     const viewManager = setupViewManager();
 
-    expect(viewManager.resolve("hello-world", { name: "World" })).toEqual(
+    expect(await viewManager.resolve("hello-world", { name: "World" })).toEqual(
       `<h1>Hello World</h1>`
     );
   });
 
-  it("should preserve space characters in data values", () => {
+  it("should preserve space characters in data values", async () => {
     const viewManager = setupViewManager();
 
-    expect(viewManager.resolve("hello-world", { name: "\nWorld" })).toEqual(
-      `<h1>Hello &#10;World</h1>`
-    );
+    expect(
+      await viewManager.resolve("hello-world", { name: "\nWorld" })
+    ).toEqual(`<h1>Hello &#10;World</h1>`);
   });
 
-  it("should compile if statements", () => {
+  it("should compile if statements", async () => {
     const viewManager = setupViewManager();
 
-    expect(viewManager.resolve("single-if", { name: "World" })).toEqual(
+    expect(await viewManager.resolve("single-if", { name: "World" })).toEqual(
       "Hello World "
     );
   });
 
-  it("should compile if statements with else", () => {
+  it("should compile if statements with else", async () => {
     const viewManager = setupViewManager();
 
-    expect(viewManager.resolve("if-else", { name: false })).toEqual(
+    expect(await viewManager.resolve("if-else", { name: false })).toEqual(
       "Hello Universe "
     );
   });
 
-  it("should compile if statements with else if", () => {
+  it("should compile if statements with else if", async () => {
     const viewManager = setupViewManager();
 
-    expect(viewManager.resolve("if-elseif", { name: false, age: 12 })).toEqual(
-      "Hello Universe "
-    );
+    expect(
+      await viewManager.resolve("if-elseif", { name: false, age: 12 })
+    ).toEqual("Hello Universe ");
   });
 
-  it("should compile simple for loop", () => {
+  it("should compile simple for loop", async () => {
     const viewManager = setupViewManager();
 
-    expect(viewManager.resolve("for", { items: ["World", "Universe"] }))
+    expect(await viewManager.resolve("for", { items: ["World", "Universe"] }))
       .toEqual(`<ul>
   <li>World</li>
   <li>Universe</li>
   </ul>`);
   });
 
-  it("should throw an error if a template is not found", () => {
+  it("should throw an error if a template is not found", async () => {
     const viewManager = setupViewManager();
 
-    expect(() => viewManager.resolve("not-found")).toThrowError(
+    await expect(() => viewManager.resolve("not-found")).rejects.toThrowError(
       "Template 'not-found' not found"
     );
   });
 
-  it("should render a layout and it's content", () => {
+  it("should render a layout and it's content", async () => {
     const viewManager = setupViewManager();
 
     expect(
-      viewManager.resolve("with-layout", { name: "<h1>Hello World</h1>" })
+      await viewManager.resolve("with-layout", { name: "<h1>Hello World</h1>" })
     ).toEqual(
       `<!DOCTYPE html>
 <html lang="en">
@@ -112,29 +112,32 @@ describe("Simple rendering", () => {
     );
   });
 
-  it("should include and render content", () => {
-    const viewManager = setupViewManager();
-
-    expect(viewManager.resolve("include.include", { name: "hello-world" }))
-      .toEqual(`<section><h1>Include</h1>
-<p>hello&#45;world</p></section>`);
-  });
-
-  it("should escape html", () => {
+  it("should include and render content", async () => {
     const viewManager = setupViewManager();
 
     expect(
-      viewManager.resolve("escape", { name: "<script>alert('hello')</script>" })
+      await viewManager.resolve("include.include", { name: "hello-world" })
+    ).toEqual(`<section><h1>Include</h1>
+<p>hello&#45;world</p></section>`);
+  });
+
+  it("should escape html", async () => {
+    const viewManager = setupViewManager();
+
+    expect(
+      await viewManager.resolve("escape", {
+        name: "<script>alert('hello')</script>",
+      })
     ).toEqual(`<div>
   <h1>&#60;script&#62;alert&#40;&#39;hello&#39;&#41;&#60;&#47;script&#62;</h1>
 </div>`);
   });
 
-  it("should not escape html", () => {
+  it("should not escape html", async () => {
     const viewManager = setupViewManager();
 
     expect(
-      viewManager.resolve("no-escape", {
+      await viewManager.resolve("no-escape", {
         name: "<script>alert('hello')</script>",
       })
     ).toEqual(`<div>
@@ -142,11 +145,11 @@ describe("Simple rendering", () => {
 </div>`);
   });
 
-  it("should render mixed templates", () => {
+  it("should render mixed templates", async () => {
     const viewManager = setupViewManager();
 
     expect(
-      viewManager.resolve("mixed", {
+      await viewManager.resolve("mixed", {
         users: [
           { name: "Jean Bauche", role: "admin" },
           { name: "Eli Kopter", role: "guest" },
@@ -178,40 +181,40 @@ describe("Simple rendering", () => {
 });
 
 describe("Macros", () => {
-  it("should use a registered macro", () => {
-    const viewManager = setupViewManager();
-
-    viewManager.addMacro("hello", (name) => `Hello ${name}`);
-    expect(viewManager.resolve("macros.hello", { name: "World" })).toEqual(
-      `Hello World`
-    );
-  });
-
-  it("should use a registered macro using directive syntax", () => {
+  it("should use a registered macro", async () => {
     const viewManager = setupViewManager();
 
     viewManager.addMacro("hello", (name) => `Hello ${name}`);
     expect(
-      viewManager.resolve("macros.hello-directive", { name: "World" })
+      await viewManager.resolve("macros.hello", { name: "World" })
     ).toEqual(`Hello World`);
   });
 
-  it("should throw an error if a macro is not found", () => {
+  it("should use a registered macro using directive syntax", async () => {
     const viewManager = setupViewManager();
 
-    expect(() =>
+    viewManager.addMacro("hello", (name) => `Hello ${name}`);
+    expect(
+      await viewManager.resolve("macros.hello-directive", { name: "World" })
+    ).toEqual(`Hello World`);
+  });
+
+  it("should throw an error if a macro is not found", async () => {
+    const viewManager = setupViewManager();
+
+    await expect(() =>
       viewManager.resolve("macros.not-found", { name: "World" })
-    ).toThrowError(
+    ).rejects.toThrowError(
       "Error in view 'macros.not-found': TypeError: this.notFound is not a function"
     );
   });
 });
 
 describe("View cache", () => {
-  it("should cache a view", () => {
+  it("should cache a view", async () => {
     const viewManager = setupViewManager();
 
-    viewManager.resolve("hello-world", { name: "World" });
+    await viewManager.resolve("hello-world", { name: "World" });
     const fs = require("fs");
     const path = require("path");
     const hash = viewManager.hashName("hello-world");
@@ -219,10 +222,11 @@ describe("View cache", () => {
     expect(fs.existsSync(filePath)).toBeTruthy();
   });
 
-  it("should use cache", () => {
+  it("should use cache", async () => {
     const viewManager = setupViewManager();
-
-    viewManager.resolve("hello-world", { name: "World" });
-    viewManager.resolve("hello-world", { name: "World" });
+    await Promise.all([
+      viewManager.resolve("hello-world", { name: "World" }),
+      viewManager.resolve("hello-world", { name: "World" }),
+    ]);
   });
 });

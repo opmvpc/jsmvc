@@ -19,15 +19,25 @@ class ViewManager {
         this._paths.push(path);
         return this;
     }
-    resolve(template, data = {}) {
+    async resolve(template, data = {}) {
         const hash = this.hashName(template);
         const filePath = this.resolvePath(template);
         if (!this._templates.has(hash)) {
             const compiledView = this._engine.render(new View_1.View(filePath, data, template));
             return compiledView;
         }
-        const code = fs.readFileSync(this._templates.get(hash), "utf8");
+        const code = await this.readCachedTemplate(this._templates.get(hash));
         return this._engine.executeCode(code, data, hash);
+    }
+    readCachedTemplate(cachedTemplatePath) {
+        return new Promise((resolve, reject) => {
+            fs.readFile(cachedTemplatePath, "utf8", (err, code) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(code);
+            });
+        });
     }
     hashName(template) {
         const crypto = require("crypto");
@@ -59,18 +69,31 @@ class ViewManager {
         this._templates.set(hash, fileName);
     }
     emptyCacheDir() {
+        this.deleteCacheDir();
         this.ensureFolderExists(this._cacheDir);
-        fs.readdirSync(this._cacheDir).forEach((file) => {
-            fs.unlinkSync(pathManager.resolve(this._cacheDir, file));
-        });
+        // fs.readdirSync(this._cacheDir).forEach((file: string) => {
+        //   fs.unlinkSync(pathManager.resolve(this._cacheDir, file));
+        // });
         this._templates.clear();
+    }
+    deleteCacheDir() {
+        try {
+            fs.rmSync(this._cacheDir, { recursive: true });
+        }
+        catch (error) {
+            if (error.code !== "ENOENT") {
+                throw error;
+            }
+        }
     }
     ensureFolderExists(path, mask = 0o755) {
         try {
             fs.mkdirSync(path, mask);
         }
         catch (error) {
-            // do nothing
+            if (error.code !== "EEXIST") {
+                throw error;
+            }
         }
     }
     get cacheDir() {
