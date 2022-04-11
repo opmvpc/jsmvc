@@ -1,4 +1,3 @@
-import { fstatSync } from "fs";
 import { Engine } from "./Engine";
 import { View } from "./View";
 const pathManager = require("path");
@@ -88,9 +87,6 @@ export class ViewManager {
   public emptyCacheDir(): void {
     this.deleteCacheDir();
     this.ensureFolderExists(this._cacheDir);
-    // fs.readdirSync(this._cacheDir).forEach((file: string) => {
-    //   fs.unlinkSync(pathManager.resolve(this._cacheDir, file));
-    // });
     this._templates.clear();
   }
 

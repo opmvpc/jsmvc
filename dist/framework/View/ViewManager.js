@@ -71,9 +71,6 @@ class ViewManager {
     emptyCacheDir() {
         this.deleteCacheDir();
         this.ensureFolderExists(this._cacheDir);
-        // fs.readdirSync(this._cacheDir).forEach((file: string) => {
-        //   fs.unlinkSync(pathManager.resolve(this._cacheDir, file));
-        // });
         this._templates.clear();
     }
     deleteCacheDir() {
