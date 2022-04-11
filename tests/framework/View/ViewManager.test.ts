@@ -1,15 +1,22 @@
+import path from "path";
 import { ViewManager } from "../../../src/framework/View/ViewManager";
+
+const setupViewManager = (): ViewManager => {
+  const viewManager = new ViewManager(path.resolve(__dirname, "./cache"));
+  viewManager.addPath(path.resolve(__dirname, "test_templates"));
+  return viewManager;
+};
 
 describe("Simple rendering", () => {
   it("should return empty string", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(viewManager.resolve("static_templates/empty")).toEqual("");
   });
 
   it("should return input", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(viewManager.resolve("static_templates.hello")).toEqual(
       `<!DOCTYPE html>
 <html lang="en">
@@ -27,48 +34,48 @@ describe("Simple rendering", () => {
   });
 
   it("should render a simple view", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(viewManager.resolve("hello-world", { name: "World" })).toEqual(
       `<h1>Hello World</h1>`
     );
   });
 
   it("should preserve space characters in data values", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(viewManager.resolve("hello-world", { name: "\nWorld" })).toEqual(
       `<h1>Hello &#10;World</h1>`
     );
   });
 
   it("should compile if statements", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(viewManager.resolve("single-if", { name: "World" })).toEqual(
       "Hello World "
     );
   });
 
   it("should compile if statements with else", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(viewManager.resolve("if-else", { name: false })).toEqual(
       "Hello Universe "
     );
   });
 
   it("should compile if statements with else if", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(viewManager.resolve("if-elseif", { name: false, age: 12 })).toEqual(
       "Hello Universe "
     );
   });
 
   it("should compile simple for loop", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(viewManager.resolve("for", { items: ["World", "Universe"] }))
       .toEqual(`<ul>
   <li>World</li>
@@ -77,16 +84,16 @@ describe("Simple rendering", () => {
   });
 
   it("should throw an error if a template is not found", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(() => viewManager.resolve("not-found")).toThrowError(
       "Template 'not-found' not found"
     );
   });
 
   it("should render a layout and it's content", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(
       viewManager.resolve("with-layout", { name: "<h1>Hello World</h1>" })
     ).toEqual(
@@ -106,16 +113,16 @@ describe("Simple rendering", () => {
   });
 
   it("should include and render content", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(viewManager.resolve("include.include", { name: "hello-world" }))
       .toEqual(`<section><h1>Include</h1>
 <p>hello&#45;world</p></section>`);
   });
 
   it("should escape html", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(
       viewManager.resolve("escape", { name: "<script>alert('hello')</script>" })
     ).toEqual(`<div>
@@ -124,8 +131,8 @@ describe("Simple rendering", () => {
   });
 
   it("should not escape html", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(
       viewManager.resolve("no-escape", {
         name: "<script>alert('hello')</script>",
@@ -136,8 +143,8 @@ describe("Simple rendering", () => {
   });
 
   it("should render mixed templates", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(
       viewManager.resolve("mixed", {
         users: [
@@ -172,8 +179,8 @@ describe("Simple rendering", () => {
 
 describe("Macros", () => {
   it("should use a registered macro", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     viewManager.addMacro("hello", (name) => `Hello ${name}`);
     expect(viewManager.resolve("macros.hello", { name: "World" })).toEqual(
       `Hello World`
@@ -181,8 +188,8 @@ describe("Macros", () => {
   });
 
   it("should use a registered macro using directive syntax", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     viewManager.addMacro("hello", (name) => `Hello ${name}`);
     expect(
       viewManager.resolve("macros.hello-directive", { name: "World" })
@@ -190,8 +197,8 @@ describe("Macros", () => {
   });
 
   it("should throw an error if a macro is not found", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     expect(() =>
       viewManager.resolve("macros.not-found", { name: "World" })
     ).toThrowError(
@@ -202,23 +209,19 @@ describe("Macros", () => {
 
 describe("View cache", () => {
   it("should cache a view", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     viewManager.resolve("hello-world", { name: "World" });
     const fs = require("fs");
     const path = require("path");
     const hash = viewManager.hashName("hello-world");
-    const filePath = path.resolve(
-      __dirname,
-      viewManager.VIEWCACHEDIR,
-      hash + ".js"
-    );
+    const filePath = path.resolve(viewManager.cacheDir, hash + ".js");
     expect(fs.existsSync(filePath)).toBeTruthy();
   });
 
   it("should use cache", () => {
-    const viewManager = new ViewManager();
-    viewManager.addPath(__dirname + "/test_templates");
+    const viewManager = setupViewManager();
+
     viewManager.resolve("hello-world", { name: "World" });
     viewManager.resolve("hello-world", { name: "World" });
   });

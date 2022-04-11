@@ -6,13 +6,13 @@ const View_1 = require("./View");
 const pathManager = require("path");
 const fs = require("fs");
 class ViewManager {
-    constructor() {
-        this.VIEWCACHEDIR = "../../../storage/framework/cache/views";
+    constructor(cacheDir) {
         this._paths = [];
         this._engine = new Engine_1.Engine();
         this._engine.setManager(this);
         this._macros = new Map();
         this._templates = new Map();
+        this._cacheDir = cacheDir;
         this.emptyCacheDir();
     }
     addPath(path) {
@@ -54,16 +54,27 @@ class ViewManager {
     putCodeInCache(templateName, code) {
         const hash = this.hashName(templateName);
         //save code in a cache file
-        const fileName = pathManager.resolve(__dirname, this.VIEWCACHEDIR, hash + ".js");
+        const fileName = pathManager.resolve(this._cacheDir, hash + ".js");
         fs.writeFileSync(fileName, code);
         this._templates.set(hash, fileName);
     }
     emptyCacheDir() {
-        const dirPath = pathManager.resolve(__dirname, this.VIEWCACHEDIR);
-        fs.readdirSync(dirPath).forEach((file) => {
-            fs.unlinkSync(pathManager.resolve(dirPath, file));
+        this.ensureFolderExists(this._cacheDir);
+        fs.readdirSync(this._cacheDir).forEach((file) => {
+            fs.unlinkSync(pathManager.resolve(this._cacheDir, file));
         });
         this._templates.clear();
+    }
+    ensureFolderExists(path, mask = 0o755) {
+        try {
+            fs.mkdirSync(path, mask);
+        }
+        catch (error) {
+            // do nothing
+        }
+    }
+    get cacheDir() {
+        return this._cacheDir;
     }
 }
 exports.ViewManager = ViewManager;

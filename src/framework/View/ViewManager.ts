@@ -8,15 +8,15 @@ export class ViewManager {
   private _engine: Engine;
   private _macros: Map<string, CallableFunction>;
   private _templates: Map<string, string>;
+  private _cacheDir: string;
 
-  public readonly VIEWCACHEDIR = "../../../storage/framework/cache/views";
-
-  constructor() {
+  constructor(cacheDir: string) {
     this._paths = [];
     this._engine = new Engine();
     this._engine.setManager(this);
     this._macros = new Map();
     this._templates = new Map();
+    this._cacheDir = cacheDir;
     this.emptyCacheDir();
   }
 
@@ -67,21 +67,28 @@ export class ViewManager {
   public putCodeInCache(templateName: string, code: string): void {
     const hash = this.hashName(templateName);
     //save code in a cache file
-    const fileName = pathManager.resolve(
-      __dirname,
-      this.VIEWCACHEDIR,
-      hash + ".js"
-    );
+    const fileName = pathManager.resolve(this._cacheDir, hash + ".js");
     fs.writeFileSync(fileName, code);
     this._templates.set(hash, fileName);
   }
 
   public emptyCacheDir(): void {
-    const dirPath = pathManager.resolve(__dirname, this.VIEWCACHEDIR);
-
-    fs.readdirSync(dirPath).forEach((file: string) => {
-      fs.unlinkSync(pathManager.resolve(dirPath, file));
+    this.ensureFolderExists(this._cacheDir);
+    fs.readdirSync(this._cacheDir).forEach((file: string) => {
+      fs.unlinkSync(pathManager.resolve(this._cacheDir, file));
     });
     this._templates.clear();
+  }
+
+  private ensureFolderExists(path: string, mask: number = 0o755): void {
+    try {
+      fs.mkdirSync(path, mask);
+    } catch (error: any) {
+      // do nothing
+    }
+  }
+
+  public get cacheDir(): string {
+    return this._cacheDir;
   }
 }

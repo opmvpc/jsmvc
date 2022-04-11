@@ -1,3 +1,4 @@
+import path from "path";
 import { ViewManager } from "../View/ViewManager";
 import { HttpContext } from "./HttpContext/HttpContext";
 import { storage } from "./HttpContext/LocalStorage/LocalStorage";
@@ -9,7 +10,9 @@ export class Server {
 
   constructor() {
     this._router = new Router();
-    this._viewManager = new ViewManager();
+    this._viewManager = new ViewManager(
+      path.resolve(__dirname, "../../../storage/framework/cache/views")
+    );
   }
 
   get router(): Router {
