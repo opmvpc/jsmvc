@@ -23,34 +23,46 @@ class Engine {
      * @param view view to render
      * @returns string of rendered html
      */
-    render(view) {
-        const code = this.compile(view);
-        this._manager?.putCodeInCache(view.templateName, code);
-        return this.executeCode(code, view.data, view.templateName);
+    async render(view) {
+        const code = await this.compile(view);
+        await this._manager?.putCodeInCache(view.templateName, code);
+        return await this.executeCode(code, view.data, view.templateName);
     }
-    compile(view) {
-        const template = fs.readFileSync(view.template, "utf8");
+    async compile(view) {
+        const template = await this.readTemplateFile(view.template);
         let tokens = this.getTokens(template);
-        let code = this.generateCode(tokens, view.data);
+        let code = await this.generateCode(tokens, view.data);
         let { layoutPath, layoutName } = this.getLayoutPathAndName(template);
         if (layoutPath !== "") {
-            return this.renderViewWithLayout(code, view, layoutPath, layoutName);
+            return await this.renderViewWithLayout(code, view, layoutPath, layoutName);
         }
         return code;
     }
-    renderViewWithLayout(code, view, layoutPath, templateName) {
-        const content = this.executeCode(code, view.data, view.templateName);
+    readTemplateFile(template) {
+        return new Promise((resolve, reject) => {
+            fs.readFile(template, "utf8", (err, data) => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(data);
+                }
+            });
+        });
+    }
+    async renderViewWithLayout(code, view, layoutPath, templateName) {
+        const content = await this.executeCode(code, view.data, view.templateName);
         const layoutView = new View_1.View(layoutPath, {
             content: content,
         }, templateName);
-        return this.addText(this.render(layoutView));
+        return this.addText(await this.render(layoutView));
     }
-    generateCode(tokens, data) {
+    async generateCode(tokens, data) {
         let code = "";
         for (let i = 0; i < tokens.length; i++) {
             const token = tokens[i];
             if (Engine.INCLUDE_REGEX.test(token)) {
-                code += this.include(token, data);
+                code += await this.include(token, data);
             }
             else if (token.startsWith("@")) {
                 code += this.addDirective(token);
@@ -67,7 +79,7 @@ class Engine {
         }
         return code;
     }
-    include(line, data) {
+    async include(line, data) {
         // include partial
         let match = line.match(Engine.INCLUDE_REGEX);
         let [partialTemplate, partialData] = match[1].split(",");
@@ -76,7 +88,8 @@ class Engine {
         const partialDataObject = new Function("return " + partialData).apply(data);
         const partialPath = this._manager?.resolvePath(partialTemplate);
         const partialView = new View_1.View(partialPath, partialDataObject, partialTemplate);
-        return this.addText(this.render(partialView));
+        const partialHtml = await this.render(partialView);
+        return this.addText(partialHtml);
     }
     getTokens(template) {
         const tokensRegex = Engine.TOKENS_REGEX;
@@ -92,7 +105,7 @@ class Engine {
         tokens.push(endOfTemplate);
         return tokens;
     }
-    executeCode(code, data, templateName) {
+    async executeCode(code, data, templateName) {
         code = "const r=[];" + code + "return r.join('');";
         data = this.addMacrosToViewData(data);
         let html = "";

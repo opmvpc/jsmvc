@@ -67,7 +67,9 @@ class Router {
     dispatchError(error) {
         if (this.errorHandler.get(500) === undefined) {
             this.errorHandler.set(500, () => {
-                if (error) {
+                if (error &&
+                    (process.env.NODE_ENV === "development" ||
+                        process.env.NODE_ENV === "test")) {
                     return (0, Response_1.response)(`Server error:
         <br> ${error?.stack}`, 500);
                 }

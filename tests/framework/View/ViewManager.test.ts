@@ -224,9 +224,35 @@ describe("View cache", () => {
 
   it("should use cache", async () => {
     const viewManager = setupViewManager();
-    await Promise.all([
-      viewManager.resolve("hello-world", { name: "World" }),
-      viewManager.resolve("hello-world", { name: "World" }),
-    ]);
+    await viewManager.resolve("hello-world", { name: "World" });
+    await viewManager.resolve("hello-world", { name: "World" });
+  });
+
+  it("should throw an error if a cached view path does not exist", async () => {
+    const viewManager = setupViewManager();
+    await expect(
+      viewManager.readCachedTemplate("/does/not/exist")
+    ).rejects.toThrowError(/ENOENT: no such file or directory, open/);
+  });
+});
+
+describe("Ensure cache dir exsists", () => {
+  it("should throw an error if path does not exists", () => {
+    const viewManager = setupViewManager();
+    expect(() =>
+      viewManager.ensureFolderExists("/does/not/exist")
+    ).toThrowError(
+      "ENOENT: no such file or directory, mkdir '/does/not/exist'"
+    );
+  });
+});
+
+describe("Put code in cache file", () => {
+  it("should throw an error if path does not exists", async () => {
+    const viewManager = setupViewManager();
+    viewManager.cacheDir = "/does/not/exist";
+    await expect(() =>
+      viewManager.putCodeInCache("does/not/exist", "")
+    ).rejects.toThrowError(/ENOENT: no such file or directory, open/);
   });
 });

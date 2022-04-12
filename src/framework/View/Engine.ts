@@ -30,31 +30,48 @@ export class Engine {
    * @param view view to render
    * @returns string of rendered html
    */
-  public render(view: View): string {
-    const code = this.compile(view);
-    this._manager?.putCodeInCache(view.templateName, code);
-    return this.executeCode(code, view.data, view.templateName);
+  public async render(view: View): Promise<string> {
+    const code = await this.compile(view);
+    await this._manager?.putCodeInCache(view.templateName, code);
+    return await this.executeCode(code, view.data, view.templateName);
   }
 
-  public compile(view: View): string {
-    const template: string = fs.readFileSync(view.template, "utf8");
+  public async compile(view: View): Promise<string> {
+    const template: string = await this.readTemplateFile(view.template);
 
     let tokens: string[] = this.getTokens(template);
-    let code: string = this.generateCode(tokens, view.data);
+    let code: string = await this.generateCode(tokens, view.data);
     let { layoutPath, layoutName } = this.getLayoutPathAndName(template);
     if (layoutPath !== "") {
-      return this.renderViewWithLayout(code, view, layoutPath, layoutName);
+      return await this.renderViewWithLayout(
+        code,
+        view,
+        layoutPath,
+        layoutName
+      );
     }
     return code;
   }
 
-  private renderViewWithLayout(
+  readTemplateFile(template: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      fs.readFile(template, "utf8", (err: any, data: string) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      });
+    });
+  }
+
+  private async renderViewWithLayout(
     code: string,
     view: View,
     layoutPath: string,
     templateName: string
-  ): string {
-    const content = this.executeCode(code, view.data, view.templateName);
+  ): Promise<string> {
+    const content = await this.executeCode(code, view.data, view.templateName);
     const layoutView = new View(
       layoutPath,
       {
@@ -62,15 +79,15 @@ export class Engine {
       },
       templateName
     );
-    return this.addText(this.render(layoutView));
+    return this.addText(await this.render(layoutView));
   }
 
-  private generateCode(tokens: string[], data: { [k: string]: any }) {
+  private async generateCode(tokens: string[], data: { [k: string]: any }) {
     let code = "";
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
       if (Engine.INCLUDE_REGEX.test(token)) {
-        code += this.include(token, data);
+        code += await this.include(token, data);
       } else if (token.startsWith("@")) {
         code += this.addDirective(token);
       } else if (token.startsWith("{{")) {
@@ -84,7 +101,10 @@ export class Engine {
     return code;
   }
 
-  private include(line: string, data: { [k: string]: any }): string {
+  private async include(
+    line: string,
+    data: { [k: string]: any }
+  ): Promise<string> {
     // include partial
     let match = line.match(Engine.INCLUDE_REGEX);
     let [partialTemplate, partialData] = match![1].split(",");
@@ -99,7 +119,9 @@ export class Engine {
       partialDataObject,
       partialTemplate
     );
-    return this.addText(this.render(partialView));
+    const partialHtml = await this.render(partialView);
+
+    return this.addText(partialHtml);
   }
 
   private getTokens(template: string) {
@@ -119,11 +141,11 @@ export class Engine {
     return tokens;
   }
 
-  public executeCode(
+  public async executeCode(
     code: string,
     data: { [k: string]: any },
     templateName: string
-  ): string {
+  ): Promise<string> {
     code = "const r=[];" + code + "return r.join('');";
     data = this.addMacrosToViewData(data);
 

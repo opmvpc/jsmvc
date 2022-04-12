@@ -13,7 +13,7 @@ class ViewManager {
         this._macros = new Map();
         this._templates = new Map();
         this._cacheDir = cacheDir;
-        this.emptyCacheDir();
+        this.ensureFolderExists(this._cacheDir);
     }
     addPath(path) {
         this._paths.push(path);
@@ -27,7 +27,7 @@ class ViewManager {
             return compiledView;
         }
         const code = await this.readCachedTemplate(this._templates.get(hash));
-        return this._engine.executeCode(code, data, hash);
+        return await this._engine.executeCode(code, data, hash);
     }
     readCachedTemplate(cachedTemplatePath) {
         return new Promise((resolve, reject) => {
@@ -61,27 +61,22 @@ class ViewManager {
     get macros() {
         return this._macros;
     }
-    putCodeInCache(templateName, code) {
+    async putCodeInCache(templateName, code) {
         const hash = this.hashName(templateName);
         //save code in a cache file
         const fileName = pathManager.resolve(this._cacheDir, hash + ".js");
-        fs.writeFileSync(fileName, code);
+        await this.writeInfile(fileName, code);
         this._templates.set(hash, fileName);
     }
-    emptyCacheDir() {
-        this.deleteCacheDir();
-        this.ensureFolderExists(this._cacheDir);
-        this._templates.clear();
-    }
-    deleteCacheDir() {
-        try {
-            fs.rmSync(this._cacheDir, { recursive: true });
-        }
-        catch (error) {
-            if (error.code !== "ENOENT") {
-                throw error;
-            }
-        }
+    writeInfile(fileName, code) {
+        return new Promise((resolve, reject) => {
+            fs.writeFile(fileName, code, (err) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve();
+            });
+        });
     }
     ensureFolderExists(path, mask = 0o755) {
         try {
@@ -95,6 +90,9 @@ class ViewManager {
     }
     get cacheDir() {
         return this._cacheDir;
+    }
+    set cacheDir(value) {
+        this._cacheDir = value;
     }
 }
 exports.ViewManager = ViewManager;

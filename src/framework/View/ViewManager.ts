@@ -17,7 +17,7 @@ export class ViewManager {
     this._macros = new Map();
     this._templates = new Map();
     this._cacheDir = cacheDir;
-    this.emptyCacheDir();
+    this.ensureFolderExists(this._cacheDir);
   }
 
   public addPath(path: string): this {
@@ -36,7 +36,7 @@ export class ViewManager {
     }
     const code = await this.readCachedTemplate(this._templates.get(hash)!);
 
-    return this._engine.executeCode(code, data, hash);
+    return await this._engine.executeCode(code, data, hash);
   }
 
   public readCachedTemplate(cachedTemplatePath: string): Promise<string> {
@@ -76,31 +76,29 @@ export class ViewManager {
     return this._macros;
   }
 
-  public putCodeInCache(templateName: string, code: string): void {
+  public async putCodeInCache(
+    templateName: string,
+    code: string
+  ): Promise<void> {
     const hash = this.hashName(templateName);
     //save code in a cache file
     const fileName = pathManager.resolve(this._cacheDir, hash + ".js");
-    fs.writeFileSync(fileName, code);
+    await this.writeInfile(fileName, code);
     this._templates.set(hash, fileName);
   }
 
-  public emptyCacheDir(): void {
-    this.deleteCacheDir();
-    this.ensureFolderExists(this._cacheDir);
-    this._templates.clear();
+  private writeInfile(fileName: any, code: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      fs.writeFile(fileName, code, (err: any) => {
+        if (err) {
+          reject(err);
+        }
+        resolve();
+      });
+    });
   }
 
-  private deleteCacheDir(): void {
-    try {
-      fs.rmSync(this._cacheDir, { recursive: true });
-    } catch (error: any) {
-      if (error.code !== "ENOENT") {
-        throw error;
-      }
-    }
-  }
-
-  private ensureFolderExists(path: string, mask: number = 0o755): void {
+  public ensureFolderExists(path: string, mask: number = 0o755): void {
     try {
       fs.mkdirSync(path, mask);
     } catch (error: any) {
@@ -112,5 +110,9 @@ export class ViewManager {
 
   public get cacheDir(): string {
     return this._cacheDir;
+  }
+
+  public set cacheDir(value: string) {
+    this._cacheDir = value;
   }
 }
