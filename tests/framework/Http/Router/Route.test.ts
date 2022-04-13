@@ -1,5 +1,6 @@
 import { HttpContext } from "../../../../src/framework/Http/HttpContext/HttpContext";
 import { Route } from "../../../../src/framework/Http/Router/Route";
+import { HomeController } from "./fixtures/HomeController";
 
 describe("Path normalization", () => {
   it("should return /", () => {
@@ -96,5 +97,13 @@ describe("Route can be named", () => {
       () => {}
     ).setName("products.view");
     expect(route.name).toEqual("products.view");
+  });
+});
+
+describe("Route dispatch to controller", () => {
+  it("should dispatch to controller by object", async () => {
+    const controller = new HomeController();
+    const route = new Route("GET", "/", [controller, "index"]);
+    expect(await route.dispatch()).toBe("hello from controller");
   });
 });

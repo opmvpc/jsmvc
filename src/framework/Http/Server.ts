@@ -28,11 +28,23 @@ export class Server {
     const router = this._router;
     const viewManager = this._viewManager;
 
-    return http.createServer(function (req: any, res: any) {
-      const state = new HttpContext(req, res, viewManager);
-      return storage.run(state, async () => {
+    return http.createServer(async (req: any, res: any) => {
+      const ctx = await this.buildCtx(req, res, viewManager);
+      return storage.run(ctx, async () => {
         await router.dispatch();
       });
     });
+  }
+
+  private async buildCtx(
+    req: any,
+    res: any,
+    viewManager: ViewManager
+  ): Promise<HttpContext> {
+    const ctx = new HttpContext(req, res, viewManager);
+    await ctx.parseReqBody();
+    ctx.parseQueryString();
+
+    return ctx;
   }
 }

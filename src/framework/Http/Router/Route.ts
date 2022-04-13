@@ -7,7 +7,7 @@ export class Route {
   constructor(
     private _method: string,
     private _path: string,
-    private _handler: CallableFunction
+    private _handler: CallableFunction | Array<any>
   ) {
     this._params = new Map();
   }
@@ -114,7 +114,14 @@ export class Route {
   }
 
   dispatch(): any {
-    return this._handler(HttpContext.get());
+    const ctx = HttpContext.get();
+    if (this._handler instanceof Function) {
+      return this._handler(ctx);
+    }
+
+    const [controller, action] = this._handler;
+
+    return controller[action](ctx);
   }
 
   get params(): Map<string, string | number | null> {

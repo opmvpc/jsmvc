@@ -1,4 +1,5 @@
 import path from "path";
+import { Engine } from "../../../src/framework/View/Engine";
 import { ViewManager } from "../../../src/framework/View/ViewManager";
 
 const setupViewManager = (): ViewManager => {
@@ -227,17 +228,18 @@ describe("View cache", () => {
     await viewManager.resolve("hello-world", { name: "World" });
     await viewManager.resolve("hello-world", { name: "World" });
   });
-
-  it("should throw an error if a cached view path does not exist", async () => {
-    const viewManager = setupViewManager();
-    await expect(
-      viewManager.readCachedTemplate("/does/not/exist")
-    ).rejects.toThrowError(/ENOENT: no such file or directory, open/);
-  });
 });
 
-describe("Ensure cache dir exsists", () => {
-  it("should throw an error if path does not exists", () => {
+describe("Files handling errors", () => {
+  it("should throw an error if path does not exists when writing", async () => {
+    const viewManager = setupViewManager();
+    viewManager.cacheDir = "/does/not/exist";
+    await expect(() =>
+      viewManager.putCodeInCache("does/not/exist", "")
+    ).rejects.toThrowError(/ENOENT: no such file or directory, open/);
+  });
+
+  it("should throw an error if path does not exists when creating cache folder", () => {
     const viewManager = setupViewManager();
     expect(() =>
       viewManager.ensureFolderExists("/does/not/exist")
@@ -245,14 +247,18 @@ describe("Ensure cache dir exsists", () => {
       "ENOENT: no such file or directory, mkdir '/does/not/exist'"
     );
   });
-});
 
-describe("Put code in cache file", () => {
-  it("should throw an error if path does not exists", async () => {
+  it("should throw an error if a cached view path does not exist", async () => {
     const viewManager = setupViewManager();
-    viewManager.cacheDir = "/does/not/exist";
-    await expect(() =>
-      viewManager.putCodeInCache("does/not/exist", "")
+    await expect(
+      viewManager.readCachedTemplate("/does/not/exist")
+    ).rejects.toThrowError(/ENOENT: no such file or directory, open/);
+  });
+
+  it("should throw an error if a cached view path does not exist while reading", async () => {
+    const engine = new Engine();
+    await expect(
+      engine.readTemplateFile("/does/not/exist")
     ).rejects.toThrowError(/ENOENT: no such file or directory, open/);
   });
 });

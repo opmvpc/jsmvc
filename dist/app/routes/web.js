@@ -3,15 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerRoutes = void 0;
 const Response_1 = require("../../framework/Http/Response");
 const ViewHelper_1 = require("../../framework/View/ViewHelper");
+const HomeController_1 = require("../Http/Controllers/HomeController");
 const registerRoutes = async (router) => {
-    router
-        .get("/", () => (0, ViewHelper_1.view)("mixed", {
-        users: [
-            { name: "Jean Bauche", role: "admin" },
-            { name: "Eli Kopter", role: "guest" },
-        ],
-    }))
-        .setName("home");
+    router.get("/", [new HomeController_1.HomeController(), "index"]).setName("home");
     router.get("/old-home", () => router.redirect("/"));
     router.get("/has-server-error", () => {
         throw new Error("Oops!");

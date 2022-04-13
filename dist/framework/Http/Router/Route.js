@@ -89,7 +89,12 @@ class Route {
         return path;
     }
     dispatch() {
-        return this._handler(HttpContext_1.HttpContext.get());
+        const ctx = HttpContext_1.HttpContext.get();
+        if (this._handler instanceof Function) {
+            return this._handler(ctx);
+        }
+        const [controller, action] = this._handler;
+        return controller[action](ctx);
     }
     get params() {
         return this._params;

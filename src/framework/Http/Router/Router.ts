@@ -11,23 +11,28 @@ export class Router {
     this.errorHandler = new Map();
   }
 
-  add(method: string, path: string, handler: CallableFunction): Route {
+  add(
+    method: string,
+    path: string,
+    handler: CallableFunction | Array<any>
+  ): Route {
     const route = new Route(method, path, handler);
     this.routes.push(route);
     return route;
   }
 
-  get(path: string, handler: CallableFunction): Route {
+  get(path: string, handler: CallableFunction | Array<any>): Route {
     return this.add("GET", path, handler);
   }
 
-  post(path: string, handler: CallableFunction): Route {
+  post(path: string, handler: CallableFunction | Array<any>): Route {
     return this.add("POST", path, handler);
   }
 
   public async dispatch() {
+    const url = require("url");
     const requestMethod = HttpContext.get()?.request.method;
-    const requestPath = HttpContext.get()?.request.url;
+    const requestPath = url.parse(HttpContext.get()?.request.url).pathname;
 
     const matching = this.match(requestMethod, requestPath);
 

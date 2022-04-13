@@ -2,18 +2,10 @@ import { Router } from "../../framework/Http/Router/Router";
 import { response, jsonResponse } from "../../framework/Http/Response";
 import { HttpContext } from "../../framework/Http/HttpContext/HttpContext";
 import { view } from "../../framework/View/ViewHelper";
+import { HomeController } from "../Http/Controllers/HomeController";
 
 export const registerRoutes = async (router: Router): Promise<void> => {
-  router
-    .get("/", () =>
-      view("mixed", {
-        users: [
-          { name: "Jean Bauche", role: "admin" },
-          { name: "Eli Kopter", role: "guest" },
-        ],
-      })
-    )
-    .setName("home");
+  router.get("/", [new HomeController(), "index"]).setName("home");
   router.get("/old-home", () => router.redirect("/"));
   router.get("/has-server-error", () => {
     throw new Error("Oops!");

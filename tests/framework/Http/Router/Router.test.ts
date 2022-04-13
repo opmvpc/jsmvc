@@ -84,3 +84,67 @@ describe("Routes generation", () => {
     );
   });
 });
+
+describe("Request post parameters", () => {
+  it("should save json post parameters in ctx object", async () => {
+    const server = new Server();
+    server.router
+      .post("/", (ctx) =>
+        response(`name: ${ctx.post.name} age: ${ctx.post.age}`)
+      )
+      .setName("home");
+    const res = await supertest(server.create())
+      .post("/")
+      .set("Content-Type", "application/json")
+      .send({
+        name: "John",
+        age: "30",
+      });
+    expect(res.status).toBe(200);
+    expect(res.text).toBe("name: John age: 30");
+  });
+
+  it("should save html-encoded parameters in ctx object", async () => {
+    const server = new Server();
+    server.router
+      .post("/", (ctx) =>
+        response(`name: ${ctx.post.name} age: ${ctx.post.age}`)
+      )
+      .setName("home");
+    const res = await supertest(server.create()).post("/").type("form").send({
+      name: "John",
+      age: "30",
+    });
+    expect(res.status).toBe(200);
+    expect(res.text).toBe("name: John age: 30");
+  });
+
+  it("should save query string params in ctx object", async () => {
+    const server = new Server();
+    server.router
+      .get("/", (ctx) =>
+        response(`name: ${ctx.query.name} age: ${ctx.query.age}`)
+      )
+      .setName("home");
+    const res = await supertest(server.create())
+      .get("/?name=John&age=30")
+      .send();
+    expect(res.status).toBe(200);
+    expect(res.text).toBe("name: John age: 30");
+  });
+
+  it("should save html-encoded parameters and query string parameters in ctx object", async () => {
+    const server = new Server();
+    server.router
+      .post("/", (ctx) => response(`name: ${ctx.all.name} age: ${ctx.all.age}`))
+      .setName("home");
+    const res = await supertest(server.create())
+      .post("/?age=30")
+      .type("form")
+      .send({
+        name: "John",
+      });
+    expect(res.status).toBe(200);
+    expect(res.text).toBe("name: John age: 30");
+  });
+});
